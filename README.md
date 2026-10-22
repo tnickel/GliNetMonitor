@@ -1,5 +1,7 @@
 # GL.iNet Gateway Network Monitor 🌐
 
+![GL.iNet Gateway Network Monitor Banner](assets/hero.jpg)
+
 Ein moderner Echtzeit-Monitor für das GL.iNet Sicherheits-Gateway (GL-MT2500 / Brume 2), der für **jeden Rechner und jedes Mobilgerät im Netzwerk die aufgerufenen Webadressen (Domains) und deren exakte Häufigkeit** anzeigt.
 
 ---

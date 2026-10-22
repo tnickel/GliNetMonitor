@@ -1,5 +1,7 @@
 # GL.iNet Gateway Network Monitor — Vollständige Systemdokumentation 📘
 
+![GL.iNet Gateway Network Monitor Banner](assets/hero.jpg)
+
 ## 1. Systemübersicht & Zielsetzung
 
 Der **GL.iNet Gateway Network Monitor** ist eine spezialisierte Monitoring- und Analyse-Lösung für das lokale Netzwerk. Er analysiert kontinuierlich den gesamten DNS- und Webverkehr, der über das **GL.iNet Sicherheits-Gateway (GL-MT2500 / Brume 2)** läuft.
