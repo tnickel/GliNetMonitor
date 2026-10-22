@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GL.iNet Gateway Network Monitor | DNS & Webadressen</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav glass-panel">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>GL.iNet <span>Monitor</span></h1>
+                    <p class="subtitle">GL-MT2500 Gateway &bull; 192.168.178.93</p>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="gateway-badge" id="gatewayStatusBadge">
+                    <span class="status-dot pulsing"></span>
+                    <span id="gatewayStatusText">Verbinde...</span>
+                </div>
+
+                <div class="refresh-controls">
+                    <label for="autoRefreshSelect" class="refresh-label"><i class="fa-solid fa-clock-rotate-left"></i></label>
+                    <select id="autoRefreshSelect" class="glass-select">
+                        <option value="5" selected>5s Auto</option>
+                        <option value="10">10s Auto</option>
+                        <option value="30">30s Auto</option>
+                        <option value="0">Aus</option>
+                    </select>
+                    <button id="btnManualSync" class="btn btn-primary" title="Jetzt mit Gateway synchronisieren">
+                        <i class="fa-solid fa-arrows-rotate" id="syncIcon"></i>
+                        <span>Sync</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Metric Cards -->
+        <section class="kpi-grid">
+            <div class="kpi-card glass-panel glow-cyan">
+                <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Gesamte Anfragen</span>
+                    <span class="kpi-value" id="kpiTotalQueries">-</span>
+                </div>
+            </div>
+
+            <div class="kpi-card glass-panel glow-purple">
+                <div class="kpi-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Aktive Rechner / Geräte</span>
+                    <span class="kpi-value" id="kpiActiveClients">-</span>
+                </div>
+            </div>
+
+            <div class="kpi-card glass-panel glow-emerald">
+                <div class="kpi-icon"><i class="fa-solid fa-globe"></i></div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Besuchte Webadressen</span>
+                    <span class="kpi-value" id="kpiUniqueDomains">-</span>
+                </div>
+            </div>
+
+            <div class="kpi-card glass-panel glow-rose">
+                <div class="kpi-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Blockierte Werbe/Tracker</span>
+                    <span class="kpi-value" id="kpiBlockedQueries">-</span>
+                </div>
+            </div>
+
+            <div class="kpi-card glass-panel glow-amber">
+                <div class="kpi-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Mittlere Latenz</span>
+                    <span class="kpi-value" id="kpiLatency">- ms</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="main-tabs glass-panel">
+            <button class="tab-btn active" data-tab="tab-clients">
+                <i class="fa-solid fa-computer"></i> Geräte & Webadressen
+            </button>
+            <button class="tab-btn" data-tab="tab-network">
+                <i class="fa-solid fa-globe"></i> Netzwerk Top-Domains
+            </button>
+            <button class="tab-btn" data-tab="tab-livestream">
+                <i class="fa-solid fa-satellite-dish"></i> Live-Stream
+            </button>
+            <button class="tab-btn" data-tab="tab-trends">
+                <i class="fa-solid fa-chart-area"></i> Aktivitätsverlauf
+            </button>
+        </nav>
+
+        <!-- Main Tab Content Areas -->
+        <main class="tab-content-wrapper">
+            <!-- TAB 1: Clients & Domains -->
+            <div class="tab-pane active" id="tab-clients">
+                <div class="split-view">
+                    <!-- Left: Client list sidebar -->
+                    <aside class="client-sidebar glass-panel">
+                        <div class="sidebar-header">
+                            <h3><i class="fa-solid fa-network-wired"></i> Erkannte Rechner (<span id="clientsCount">0</span>)</h3>
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="clientSearchInput" placeholder="Gerät oder IP filtern...">
+                            </div>
+                        </div>
+                        <div class="clients-list" id="clientsListContainer">
+                            <!-- Populated dynamically -->
+                            <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Lade Geräte...</div>
+                        </div>
+                    </aside>
+
+                    <!-- Right: Selected Client Domain Details -->
+                    <section class="client-detail glass-panel" id="clientDetailSection">
+                        <!-- Client Header Banner -->
+                        <div class="detail-banner" id="clientDetailBanner">
+                            <div class="client-meta">
+                                <div class="device-avatar" id="detailDeviceAvatar">
+                                    <i class="fa-solid fa-desktop"></i>
+                                </div>
+                                <div class="meta-texts">
+                                    <div class="name-row">
+                                        <h2 id="detailClientName">Wähle ein Gerät aus</h2>
+                                        <span class="badge badge-ip" id="detailClientIp">-</span>
+                                    </div>
+                                    <p class="subtitle" id="detailClientMeta">Klicke links auf einen Rechner, um alle aufgerufenen Webadressen zu sehen.</p>
+                                </div>
+                            </div>
+                            <div class="client-stats-pills" id="detailStatsPills">
+                                <div class="pill">
+                                    <span class="pill-label">Gesamtaufrufe</span>
+                                    <span class="pill-val" id="detailTotalQueries">0</span>
+                                </div>
+                                <div class="pill">
+                                    <span class="pill-label">Webadressen</span>
+                                    <span class="pill-val" id="detailUniqueDomains">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Chart for Client Top 5 -->
+                        <div class="client-chart-box" id="clientChartBox">
+                            <div class="chart-header">
+                                <span><i class="fa-solid fa-chart-simple"></i> Top-Adressen dieses Rechners</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="clientMiniChart" height="90"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Domains Filter & Controls -->
+                        <div class="table-toolbar">
+                            <div class="toolbar-left">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="domainSearchInput" placeholder="Webadresse / Domain suchen...">
+                                </div>
+                                <div class="filter-pills">
+                                    <button class="filter-pill active" data-filter="all">Alle</button>
+                                    <button class="filter-pill" data-filter="allowed">Nur Erlaubt</button>
+                                    <button class="filter-pill" data-filter="blocked">Nur Blockiert</button>
+                                </div>
+                            </div>
+                            <div class="toolbar-right">
+                                <label for="domainSortSelect" class="sort-label">Sortieren:</label>
+                                <select id="domainSortSelect" class="glass-select">
+                                    <option value="count" selected>Häufigkeit (Meiste zuerst)</option>
+                                    <option value="last_accessed">Zuletzt aufgerufen</option>
+                                    <option value="domain">Domainname (A-Z)</option>
+                                    <option value="blocked">Blockierte zuerst</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Domains Table -->
+                        <div class="table-container">
+                            <table class="modern-table" id="clientDomainsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Webadresse (Domain)</th>
+                                        <th style="width: 20%;">Aufrufe</th>
+                                        <th style="width: 15%;">Anteil</th>
+                                        <th style="width: 20%;">Zuletzt aufgerufen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientDomainsTbody">
+                                    <tr>
+                                        <td colspan="4" class="empty-state">Wähle links ein Gerät aus, um Webadressen anzuzeigen.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- TAB 2: Network Top Domains -->
+            <div class="tab-pane" id="tab-network">
+                <div class="glass-panel content-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-globe"></i> Meistbesuchte Webadressen im gesamten Netzwerk</h2>
+                            <p class="subtitle">Aggregierte Auswertung über alle angeschlossenen Rechner und Geräte.</p>
+                        </div>
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="networkDomainSearchInput" placeholder="Domain suchen...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 40%;">Webadresse</th>
+                                    <th style="width: 20%;">Gesamtaufrufe</th>
+                                    <th style="width: 15%;">Rechner-Anzahl</th>
+                                    <th style="width: 20%;">Zuletzt angefragt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="networkDomainsTbody">
+                                <tr>
+                                    <td colspan="5" class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Lade Netzwerk-Domains...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Live-Stream -->
+            <div class="tab-pane" id="tab-livestream">
+                <div class="glass-panel content-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-satellite-dish"></i> Live-Stream der Webanfragen</h2>
+                            <p class="subtitle">Echtzeit-Feed der DNS-Abfragen im Sekundentakt.</p>
+                        </div>
+                        <div class="stream-controls">
+                            <button id="btnPauseStream" class="btn btn-secondary">
+                                <i class="fa-solid fa-pause"></i> <span>Pausieren</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container live-stream-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">Uhrzeit</th>
+                                    <th style="width: 22%;">Rechner / Gerät</th>
+                                    <th style="width: 35%;">Webadresse</th>
+                                    <th style="width: 8%;">Typ</th>
+                                    <th style="width: 10%;">Status</th>
+                                    <th style="width: 10%;">Latenz</th>
+                                </tr>
+                            </thead>
+                            <tbody id="liveStreamTbody">
+                                <tr>
+                                    <td colspan="6" class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Empfange Live-Daten...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: Trends & Zeitverlauf -->
+            <div class="tab-pane" id="tab-trends">
+                <div class="glass-panel content-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-chart-area"></i> Aktivitätsverlauf (Letzte 24 Stunden)</h2>
+                            <p class="subtitle">Verteilung des Anfragevolumens und der aktiven Rechner nach Tageszeit.</p>
+                        </div>
+                    </div>
+                    <div class="trend-chart-container">
+                        <canvas id="trendChartCanvas" height="120"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# Sensitive configurations
+config.json
+.env
+*.env
+
+# SQLite Databases (Local user traffic history)
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Logs & Temp files
+*.log
+*.tmp
+
+# IDE & Editor folders
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

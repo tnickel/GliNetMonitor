@@ -1,0 +1,19 @@
+{
+  "router": {
+    "ip": "192.168.178.93",
+    "username": "root",
+    "password": "DEIN_ROUTER_PASSWORT",
+    "timeout": 10
+  },
+  "collector": {
+    "poll_interval_seconds": 5,
+    "backfill_limit": 1000
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080
+  },
+  "database": {
+    "path": "glinet_monitor.db"
+  }
+}
